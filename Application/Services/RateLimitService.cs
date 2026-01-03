@@ -1,28 +1,18 @@
-﻿using IRibeiroForHireAPI.Domain.Interfaces; // Ajustado para o novo namespace
+﻿using IRibeiroForHireAPI.Domain.Interfaces;
 using DotNetEnv;
 using IRibeiroForHire.Services.Interfaces;
 
 namespace IRibeiroForHireAPI.Application.Services;
 
-public class RateLimitService : IRateLimitService
+public class RateLimitService(IQuestionRepository repository) : IRateLimitService
 {
-    private readonly IQuestionService _questionService;
-    private readonly int _questionLimit;
-
-    public RateLimitService(IQuestionService questionService)
-    {
-        _questionService = questionService;
-        _questionLimit = Env.GetInt("QUESTION_LIMIT", 5);
-    }
+    private readonly int _questionLimit = Env.GetInt("QUESTION_LIMIT", 5);
 
     public async Task<(int Remaining, bool IpLocked)> GetDailyLimitStatus(string visitorId, string ip)
     {
-        // Certifique-se que esses nomes existem EXATAMENTE assim na IQuestionService
-        var usedByVisitor = await _questionService.CountDailyInteractionsByVisitorId(visitorId);
-        var usedByIp = await _questionService.CountDailyInteractionsByIp(ip);
-        
-        // CORREÇÃO AQUI: Nome deve ser igual ao da interface
-        var lastByIp = await _questionService.GetLastInteractionByIp(ip);
+        var usedByVisitor = await repository.CountDailyByVisitorIdAsync(visitorId, DateTime.UtcNow);
+        var usedByIp = await repository.CountDailyByIpAsync(ip, DateTime.UtcNow);
+        var lastByIp = await repository.GetLastInteractionTimeByIpAsync(ip);
 
         int used = Math.Max(usedByVisitor, usedByIp);
 

@@ -12,7 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Infrastructure/Configurations/" />
-    <Folder Include="Infrastructure/ExternalServices/Responses/" />
     <Folder Include="Infrastructure/Repositories/" />
     <Folder Include="Infrastructure/Web/" />
   </ItemGroup>

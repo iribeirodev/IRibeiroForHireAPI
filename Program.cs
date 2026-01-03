@@ -1,13 +1,13 @@
+using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using IRibeiroForHire.Infrastructure.Data;
 using IRibeiroForHire.Services.Interfaces;
 using IRibeiroForHireAPI.Application.Services;
 using IRibeiroForHireAPI.Domain.Interfaces;
 using IRibeiroForHireAPI.Infrastructure.Configurations;
-using IRibeiroForHireAPI.Infrastructure.ExternalServices;
 using IRibeiroForHireAPI.Infrastructure.Repositories;
 using IRibeiroForHireAPI.Infrastructure.Web;
-using Microsoft.EntityFrameworkCore;
+using IRibeiroForHireAPI.Infrastructure.ExternalServices;
 
 namespace IRibeiroForHireAPI;
 
@@ -19,42 +19,44 @@ public class Program
 
         DotNetEnv.Env.Load();
 
-        // Configurações da IA
+        // Settings
         var geminiSettings = new GeminiOptions
         {
             ApiKey = Env.GetString("GEMINI_API_KEY"),
             Model = Env.GetString("GEMINI_MODEL"),
             SystemPrompt = Env.GetString("AI_SYSTEM_PROMPT"),
+            BaseUrl = Env.GetString("GEMINI_BASE_URL"),
+            DbConnectionString = Env.GetString("DB_CONNECTION_STRING"),
             Temperature = Env.GetDouble("AI_TEMPERATURE", 0.7),
-            MaxTokens = Env.GetInt("AI_MAX_TOKENS", 1000)
+            MaxTokens = Env.GetInt("AI_MAX_TOKENS", 4000)
         };
         builder.Services.AddSingleton(geminiSettings);
 
-        // Databsae
-        var connectionString = Env.GetString("DATABASE_URL");
+        // Databse
+        var connectionString = Env.GetString("DB_CONNECTION_STRING");
         builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString)); // Ou UseSqlServer se for o caso
+            options.UseNpgsql(connectionString)); 
 
-        // Registro dos Componentes (Injeção de Dependência)
+        // Infrastructure
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<VisitorTracker>();
-        
-        // Camada de Infrastructure (Adaptadores)
         builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+
         builder.Services.AddHttpClient<IGeminiTextService, GeminiTextService>();
+        builder.Services.AddHttpClient<IVectorSearchService, VectorSearchService>();
 
-        // Camada de Application (Casos de Uso)
         builder.Services.AddScoped<IQuestionService, QuestionService>();
+        builder.Services.AddScoped<IRateLimitService, RateLimitService>();
 
-        // 4. Configuração de CORS para Angular/React
+        // CORS
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("FrontendPolicy", policy =>
             {
-                policy.WithOrigins("http://localhost:4200", "http://localhost:3000") // Angular e React
+                policy.WithOrigins("http://localhost:4200", "http://localhost:3000")
                       .AllowAnyMethod()
                       .AllowAnyHeader()
-                      .AllowCredentials(); // Para uso do VisitorTracker (cookies)
+                      .AllowCredentials();
             });
         });
 
@@ -69,10 +71,7 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-        
-        // Aplica a política de CORS antes da autorização
         app.UseCors("FrontendPolicy");
-
         app.UseAuthorization();
         app.MapControllers();
 

@@ -7,15 +7,13 @@ namespace IRibeiroForHireAPI.Infrastructure.Repositories;
 
 public class QuestionRepository(AppDbContext context) : IQuestionRepository
 {
-    private readonly AppDbContext _context = context;
-
     public async Task<int> CountDailyByIpAsync(
         string ip, 
         DateTime date)
     {
         var (start, end) = GetDayRange(date);
 
-        return await _context.QaInteractions
+        return await context.QaInteractions
                             .CountAsync(i => i.UserIp == ip
                                             && i.InteractionTime >= start
                                             && i.InteractionTime < end);
@@ -27,20 +25,20 @@ public class QuestionRepository(AppDbContext context) : IQuestionRepository
     {
         var (start, end) = GetDayRange(date);
 
-        return await _context.QaInteractions
+        return await context.QaInteractions
                                 .CountAsync(i => i.VisitorId == visitorId
                                                 && i.InteractionTime >= start
                                                 && i.InteractionTime < end);
     }
 
     public async Task<List<QaInteraction>> GetByVisitorIdAsync(string visitorId)
-        => await _context.QaInteractions
+        => await context.QaInteractions
                             .Where(q => q.VisitorId == visitorId)
                             .OrderByDescending(q => q.InteractionTime)
                             .ToListAsync();
 
     public async Task<DateTime?> GetLastInteractionTimeByIpAsync(string ip)
-        => await _context.QaInteractions
+        => await context.QaInteractions
                     .Where(i => i.UserIp == ip)
                     .OrderByDescending(i => i.InteractionTime)
                     .Select(i => (DateTime?)i.InteractionTime)
@@ -48,8 +46,8 @@ public class QuestionRepository(AppDbContext context) : IQuestionRepository
 
     public async Task SaveAsync(QaInteraction interaction)
     {
-        _context.QaInteractions.Add(interaction);
-        await _context.SaveChangesAsync();
+        context.QaInteractions.Add(interaction);
+        await context.SaveChangesAsync();
     }
 
     #region Private Methods

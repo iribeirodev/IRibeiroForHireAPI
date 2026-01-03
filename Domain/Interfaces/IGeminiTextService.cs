@@ -1,7 +1,7 @@
 ﻿namespace IRibeiroForHire.Services.Interfaces;
 
 /// <summary>
-/// Domínio para serviços de IA Generativa
+/// Serviço de IA Generativa
 /// </summary>
 public interface IGeminiTextService
 {

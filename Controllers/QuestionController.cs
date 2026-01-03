@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using IRibeiroForHireAPI.Infrastructure.Web;
 using IRibeiroForHireAPI.Application.DTOs;
 using IRibeiroForHireAPI.Domain.Interfaces;
+using IRibeiroForHire.Services.Interfaces;
 
 namespace IRibeiroForHireAPI.Controllers;
 
@@ -9,6 +10,7 @@ namespace IRibeiroForHireAPI.Controllers;
 [Route("api/[controller]")]
 public class QuestionController(
     IQuestionService questionService,
+    IRateLimitService rateLimitService,
     VisitorTracker visitorTracker) : ControllerBase
 {
     [HttpPost("ask")]
@@ -17,14 +19,27 @@ public class QuestionController(
         if (string.IsNullOrEmpty(request.Question))
             return BadRequest("A pergunta não pode estar vazia.");
 
+        // Identifica o visitante
+        var visitorId = visitorTracker.GetOrCreateVisitorId();
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        var (remaining, ipLocked) = await rateLimitService.GetDailyLimitStatus(visitorId, ip);
+
+        if (ipLocked || remaining <= 0)
+        {
+            return StatusCode(429, new { 
+                message = "Limite diário de perguntas atingido. Tente novamente em 24 horas.",
+                remaining = 0
+            });
+        }
+
         // Processa a pergunta e salva a interação
         var answer = await questionService.AskQuestionAsync(
-            context: "Você é um assistente que ajuda recrutadores a conhecerem o trabalho do Itamar Ribeiro.",
             question: request.Question, 
-            visitorId: visitorTracker.GetOrCreateVisitorId(), 
-            ip: HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+            visitorId: visitorId, 
+            ip: ip);
 
-        return Ok(new { answer });
+        return Ok(new { answer, remaining = remaining - 1 });
     }
 
     /// <summary>
