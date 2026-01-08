@@ -1,0 +1,27 @@
+### Configurações de Variáveis
+@hostname = localhost
+@port = 5220
+@host = http://{{hostname}}:{{port}}
+@contentType = application/json
+
+### Pergunta 1: Sobre SQL Server
+POST {{host}}/api/Question/ask
+Content-Type: {{contentType}}
+
+{
+    "question": "O Itamar conhece SQL Server?",
+    "visitorId": "dev-test-01",
+    "ip": "127.0.0.1"
+}
+
+###
+
+### Pergunta 2: Sobre experiência com C#
+POST {{host}}/api/Question/ask
+Content-Type: {{contentType}}
+
+{
+    "question": "Quanto tempo ele tem de experiência com C#?",
+    "visitorId": "dev-test-01",
+    "ip": "127.0.0.1"
+}
