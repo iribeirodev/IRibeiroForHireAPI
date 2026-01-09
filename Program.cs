@@ -53,7 +53,11 @@ public class Program
         {
             options.AddPolicy("FrontendPolicy", policy =>
             {
-                policy.WithOrigins("https://iribeiroforhire.vercel.app")
+                policy.WithOrigins(
+                    "https://iribeiroforhire.vercel.app",
+                    "https://iribeiro.tec.br",
+                    "https://www.iribeiro.tec.br"
+                    )
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
