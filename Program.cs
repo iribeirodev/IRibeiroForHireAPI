@@ -19,21 +19,20 @@ public class Program
 
         DotNetEnv.Env.Load();
 
-        // Settings
         var geminiSettings = new GeminiOptions
         {
-            ApiKey = Env.GetString("GEMINI_API_KEY"),
-            Model = Env.GetString("GEMINI_MODEL"),
-            SystemPrompt = Env.GetString("AI_SYSTEM_PROMPT"),
-            BaseUrl = Env.GetString("GEMINI_BASE_URL"),
-            DbConnectionString = Env.GetString("DB_CONNECTION_STRING"),
+            ApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? Env.GetString("GEMINI_API_KEY"),
+            Model = Environment.GetEnvironmentVariable("GEMINI_MODEL") ?? Env.GetString("GEMINI_MODEL"),
+            SystemPrompt = Environment.GetEnvironmentVariable("AI_SYSTEM_PROMPT") ?? Env.GetString("AI_SYSTEM_PROMPT"),
+            BaseUrl = Environment.GetEnvironmentVariable("GEMINI_BASE_URL") ?? Env.GetString("GEMINI_BASE_URL"),
+            DbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ?? Env.GetString("DB_CONNECTION_STRING"),
             Temperature = Env.GetDouble("AI_TEMPERATURE", 0.7),
             MaxTokens = Env.GetInt("AI_MAX_TOKENS", 4000)
         };
         builder.Services.AddSingleton(geminiSettings);
 
-        // Databse
-        var connectionString = Env.GetString("DB_CONNECTION_STRING");
+        // Database
+        var connectionString = geminiSettings.DbConnectionString;
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString)); 
 
@@ -48,15 +47,14 @@ public class Program
         builder.Services.AddScoped<IQuestionService, QuestionService>();
         builder.Services.AddScoped<IRateLimitService, RateLimitService>();
 
-        // CORS
+        // CORS - Ajustado para aceitar o frontend no Koyeb
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("FrontendPolicy", policy =>
             {
-                policy.WithOrigins("http://localhost:4200", "http://localhost:3000")
+                policy.AllowAnyOrigin() // Em produção real, coloque o domínio do seu Angular aqui
                       .AllowAnyMethod()
-                      .AllowAnyHeader()
-                      .AllowCredentials();
+                      .AllowAnyHeader();
             });
         });
 
@@ -65,12 +63,15 @@ public class Program
 
         var app = builder.Build();
 
+        // Configuração de Porta para o Koyeb
+        var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+        app.Urls.Add($"http://0.0.0.0:{port}");
+
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
         }
 
-        app.UseHttpsRedirection();
         app.UseCors("FrontendPolicy");
         app.UseAuthorization();
         app.MapControllers();
