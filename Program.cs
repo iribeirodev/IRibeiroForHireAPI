@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.HttpOverrides;
 using DotNetEnv;
 using IRibeiroForHire.Infrastructure.Data;
 using IRibeiroForHire.Services.Interfaces;
@@ -34,7 +35,7 @@ public class Program
         // Database
         var connectionString = geminiSettings.DbConnectionString;
         builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString)); 
+            options.UseNpgsql(connectionString));
 
         // Infrastructure
         builder.Services.AddHttpContextAccessor();
@@ -52,17 +53,28 @@ public class Program
         {
             options.AddPolicy("FrontendPolicy", policy =>
             {
-                policy.WithOrigins("https://iribeiroforhire.vercel.app") 
+                policy.WithOrigins("https://iribeiroforhire.vercel.app")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .AllowCredentials(); 
+                    .AllowCredentials();
             });
         });
 
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
 
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+            // Limpa os proxies e redes conhecidas para aceitar cabeçalhos da Koyeb
+            options.KnownProxies.Clear();
+            options.KnownIPNetworks.Clear();
+        });
+
         var app = builder.Build();
+
+        app.UseForwardedHeaders();
 
         // Configuração de Porta para o Koyeb
         var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";

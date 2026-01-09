@@ -34,7 +34,7 @@ public class VisitorTracker(IHttpContextAccessor http)
             Expires = DateTimeOffset.UtcNow.AddYears(3),
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Lax
+            SameSite = SameSiteMode.None
         });
 
         return hashed;
