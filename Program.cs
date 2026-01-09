@@ -52,9 +52,10 @@ public class Program
         {
             options.AddPolicy("FrontendPolicy", policy =>
             {
-                policy.AllowAnyOrigin() // Em produção real, coloque o domínio do seu Angular aqui
-                      .AllowAnyMethod()
-                      .AllowAnyHeader();
+                policy.WithOrigins("https://iribeiroforhire.vercel.app") 
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials(); 
             });
         });
 
