@@ -1,0 +1,9 @@
+{
+  "Question": {
+    "Empty": "A pergunta não pode estar vazia.",
+    "LimitReached": "Limite diário de perguntas atingido. Tente novamente em 24 horas."
+  },
+  "Visitor": {
+    "HistoryNotFound": "Nenhum histórico encontrado para este visitante."
+  }
+}

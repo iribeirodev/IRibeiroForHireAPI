@@ -20,6 +20,11 @@ public class Program
 
         DotNetEnv.Env.Load();
 
+        builder.Configuration.AddJsonFile("Application/Resources/messages.pt-BR.json", 
+                                            optional: false, 
+                                            reloadOnChange: true);
+
+
         var geminiSettings = new GeminiOptions
         {
             ApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? Env.GetString("GEMINI_API_KEY"),
@@ -36,6 +41,10 @@ public class Program
         var connectionString = geminiSettings.DbConnectionString;
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
+
+        // Filters
+        builder.Services.AddScoped<ValidationFilter>();
+        builder.Services.AddScoped<RateLimitFilter>();
 
         // Infrastructure
         builder.Services.AddHttpContextAccessor();
@@ -64,7 +73,10 @@ public class Program
             });
         });
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers(opt =>
+        {
+            opt.Filters.Add<ValidationFilter>();
+        });
         builder.Services.AddOpenApi();
 
         builder.Services.Configure<ForwardedHeadersOptions>(options =>
