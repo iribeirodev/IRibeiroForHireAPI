@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.HttpOverrides;
 using DotNetEnv;
+using Microsoft.SemanticKernel;
 using IRibeiroForHire.Infrastructure.Data;
 using IRibeiroForHire.Services.Interfaces;
 using IRibeiroForHireAPI.Application.Services;
@@ -8,7 +9,8 @@ using IRibeiroForHireAPI.Domain.Interfaces;
 using IRibeiroForHireAPI.Infrastructure.Configurations;
 using IRibeiroForHireAPI.Infrastructure.Repositories;
 using IRibeiroForHireAPI.Infrastructure.Web;
-using IRibeiroForHireAPI.Infrastructure.ExternalServices;
+using IRibeiroForHireAPI.Application.Plugins;
+
 
 namespace IRibeiroForHireAPI;
 
@@ -37,6 +39,24 @@ public class Program
         };
         builder.Services.AddSingleton(geminiSettings);
 
+        // --- CONFIGURAÇÃO SEMANTIC KERNEL ---
+        builder.Services.AddTransient(sp =>
+        {
+            var kernelBuilder = Kernel.CreateBuilder();
+
+            kernelBuilder.AddGoogleAIGeminiChatCompletion(
+                modelId: geminiSettings.Model,
+                apiKey: geminiSettings.ApiKey,
+                httpClient: new HttpClient { BaseAddress = new Uri("https://generativelanguage.googleapis.com/v1beta/") }
+            );
+
+            // Plugins
+            kernelBuilder.Plugins.AddFromObject(sp.GetRequiredService<ResumePlugin>());
+
+            return kernelBuilder.Build();
+        });
+        // -------------------------------------
+
         // Database
         var connectionString = geminiSettings.DbConnectionString;
         builder.Services.AddDbContext<AppDbContext>(options =>
@@ -51,13 +71,15 @@ public class Program
         builder.Services.AddScoped<VisitorTracker>();
         builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 
-        builder.Services.AddHttpClient<IGeminiTextService, GeminiTextService>();
         builder.Services.AddHttpClient<IVectorSearchService, VectorSearchService>();
 
         builder.Services.AddScoped<IQuestionService, QuestionService>();
         builder.Services.AddScoped<IRateLimitService, RateLimitService>();
 
-        // CORS - Ajustado para aceitar o frontend no Koyeb
+        // Plugins
+        builder.Services.AddScoped<ResumePlugin>();
+
+        // CORS
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("FrontendPolicy", policy =>
