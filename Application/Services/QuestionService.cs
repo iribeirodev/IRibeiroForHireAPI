@@ -6,7 +6,8 @@ namespace IRibeiroForHireAPI.Application.Services;
 
 public class QuestionService(
     IQuestionRepository repository,
-    Kernel kernel) : IQuestionService
+    Kernel kernel,
+    IConfiguration configuration) : IQuestionService
 {
     public async Task<List<QaInteraction>> GetInteractions(string visitorId)
         => await repository.GetByVisitorIdAsync(visitorId);
@@ -16,21 +17,17 @@ public class QuestionService(
         string visitorId,
         string ip)
     {
+        string systemPrompt = configuration["AI_SYSTEM_PROMPT"]
+            ?? "Você é o Assistente Virtual do Itamar Ribeiro.";
+
         var settings = new PromptExecutionSettings
         {
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
 
-        string promptTemplate = @"
-            Você é o assistente de carreira do Itamar Ribeiro.
-    
-            DIRETRIZES ESTRITAS:
-            1. Sempre use a função 'get_resume_context' para buscar fatos sobre o Itamar.
-            2. Se a informação NÃO estiver no currículo, responda educadamente: 'Desculpe, não tenho essa informação específica sobre a trajetória do Itamar'.
-            3. NÃO responda sobre outros assuntos (política, culinária, etc). Mantenha o foco profissional.
-            4. Se o usuário apenas disser 'Oi', responda cordialmente e se coloque à disposição para falar do Itamar.
+        string promptTemplate = $@"{systemPrompt}
 
-            Pergunta: {{$question}}";
+            Pergunta do Recrutador: {{$question}}";
 
         var arguments = new KernelArguments(settings)
         {
