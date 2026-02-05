@@ -25,13 +25,13 @@ public class QuestionService(
             FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
         };
 
-        string promptTemplate = $@"{systemPrompt}
+        string promptTemplate = systemPrompt + @"
 
             Pergunta do Recrutador: {{$question}}";
 
         var arguments = new KernelArguments(settings)
         {
-            ["question"] = question
+            ["question"] = question // O SK vai procurar por {{$question}} e substituir por este valor
         };
 
         try

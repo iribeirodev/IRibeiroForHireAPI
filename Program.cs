@@ -1,15 +1,15 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.HttpOverrides;
-using DotNetEnv;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.SemanticKernel;
+using DotNetEnv;
 using IRibeiroForHire.Infrastructure.Data;
 using IRibeiroForHire.Services.Interfaces;
+using IRibeiroForHireAPI.Application.Plugins;
 using IRibeiroForHireAPI.Application.Services;
 using IRibeiroForHireAPI.Domain.Interfaces;
 using IRibeiroForHireAPI.Infrastructure.Configurations;
 using IRibeiroForHireAPI.Infrastructure.Repositories;
 using IRibeiroForHireAPI.Infrastructure.Web;
-using IRibeiroForHireAPI.Application.Plugins;
 
 
 namespace IRibeiroForHireAPI;
@@ -57,6 +57,26 @@ public class Program
         });
         // -------------------------------------
 
+        // Swagger
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
+            {
+                Version = "v1",
+                Title = "IRibeiro for Hire API",
+                Description = "API de Chat RAG com Gemini e Semantic Kernel para Portfólio."
+            });
+
+            // Configuração para ler os comentários XML
+            var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            if (File.Exists(xmlPath))
+            {
+                c.IncludeXmlComments(xmlPath);
+            }
+        });
+
         // Database
         var connectionString = geminiSettings.DbConnectionString;
         builder.Services.AddDbContext<AppDbContext>(options =>
@@ -99,7 +119,6 @@ public class Program
         {
             opt.Filters.Add<ValidationFilter>();
         });
-        builder.Services.AddOpenApi();
 
         builder.Services.Configure<ForwardedHeadersOptions>(options =>
         {
@@ -120,7 +139,12 @@ public class Program
 
         if (app.Environment.IsDevelopment())
         {
-            app.MapOpenApi();
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "IRibeiro for Hire API v1");
+                c.RoutePrefix = "swagger"; // Acessível em /swagger
+            });
         }
 
         app.UseCors("FrontendPolicy");
