@@ -46,4 +46,9 @@ public interface IQuestionRepository
     /// </summary>
     /// <param name="interaction">O objeto de interação populado.</param>    
     Task SaveAsync(QaInteraction interaction);
+
+    /// <summary>
+    /// Verifica se consegue abrir a conexão ao database.
+    /// </summary>
+    Task<bool> PingAsync();
 }

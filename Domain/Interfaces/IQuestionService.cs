@@ -34,4 +34,9 @@ public interface IQuestionService
     /// <param name="visitorId">Identificador único (hash) do visitante.</param>
     /// <returns>Uma lista de interações contendo perguntas, respostas e metadados.</returns>
     Task<List<QaInteraction>> GetInteractions(string visitorId);
+
+    /// <summary>
+    /// Verifica se o database pode ser conectado.
+    /// </summary>
+    Task<bool> CheckDatabaseConnection();
 }

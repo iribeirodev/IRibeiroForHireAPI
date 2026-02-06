@@ -44,6 +44,11 @@ public class QuestionRepository(AppDbContext context) : IQuestionRepository
                     .Select(i => (DateTime?)i.InteractionTime)
                     .FirstOrDefaultAsync();
 
+    public async Task<bool> PingAsync()
+    {
+        return await context.Database.CanConnectAsync();
+    }
+
     public async Task SaveAsync(QaInteraction interaction)
     {
         context.QaInteractions.Add(interaction);

@@ -63,4 +63,17 @@ public class QuestionService(
             throw;
         }
     }
+
+    public async Task<bool> CheckDatabaseConnection()
+    {
+        try
+        {
+            return await repository.PingAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao verificar conexão com banco: {ex.Message}");
+            return false;
+        }
+    }
 }

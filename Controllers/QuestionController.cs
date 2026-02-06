@@ -56,4 +56,26 @@ public class QuestionController(
     public async Task<IActionResult> GetHistory()
         => Ok(await questionService.GetInteractions(
                 visitorTracker.GetOrCreateVisitorId()));
+
+    /// <summary>
+    /// Verifica o estado de saúde da API e do banco de dados (Keep-alive).
+    /// </summary>
+    /// <remarks>
+    /// Este endpoint é utilizado por serviços externos de monitoramento para evitar 
+    /// que o Koyeb e o Neon Postgres entrem em modo de hibernação.
+    /// </remarks>
+    /// <returns>O status atual da conexão e do servidor.</returns>
+    /// <response code="200">Retorna se a API e o banco estão operacionais.</response>
+    [HttpGet("health")]
+    public async Task<IActionResult> Health()
+    {
+        var isDbUp = await questionService.CheckDatabaseConnection();
+
+        return Ok(new
+        {
+            status = "Healthy",
+            database = isDbUp ? "Online" : "Offline",
+            timestamp = DateTime.UtcNow
+        });
+    }
 }
