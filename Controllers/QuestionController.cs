@@ -67,6 +67,7 @@ public class QuestionController(
     /// <returns>O status atual da conexão e do servidor.</returns>
     /// <response code="200">Retorna se a API e o banco estão operacionais.</response>
     [HttpGet("health")]
+    [HttpHead("health")]
     public async Task<IActionResult> Health()
     {
         var isDbUp = await questionService.CheckDatabaseConnection();
