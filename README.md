@@ -1,6 +1,8 @@
-# 🤖 IRibeiro For Hire - Chat API (Gemini RAG)
+# IRibeiro For Hire - Chat API (Gemini RAG)
 
-Backend de alta performance desenvolvido em **.NET 10** que utiliza Inteligência Artificial Generativa para responder perguntas sobre a trajetória profissional de **Itamar Ribeiro**. 
+[![Build](https://github.com/iribeirodev/IRibeiroForHireAPI/actions/workflows/dotnet.yml/badge.svg)](https://github.com/iribeirodev/IRibeiroForHireAPI/actions/workflows/dotnet.yml)
+
+Backend desenvolvido em **.NET 10** que utiliza Inteligência Artificial Generativa para responder perguntas sobre a trajetória profissional de **Itamar Ribeiro**. 
 
 O projeto implementa uma arquitetura de **RAG (Retrieval-Augmented Generation)**, garantindo que a IA forneça respostas precisas baseadas em dados reais extraídos do currículo via busca vetorial.
 
